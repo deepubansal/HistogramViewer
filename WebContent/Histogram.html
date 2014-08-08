@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<style>
+body {
+	font: 12px sans-serif;
+}
+
+.bar rect {
+	fill: steelblue;
+	shape-rendering: crispEdges;
+}
+
+.active rect {
+	fill: orange;
+}
+
+.bar text,.black {
+	fill: #000;
+}
+
+.axis path,.axis line {
+	fill: none;
+	stroke: #000;
+	shape-rendering: crispEdges;
+}
+
+input {
+	padding: 5px;
+}
+
+#numbers {
+	width: 500px;
+	margin-right: 5px;
+}
+
+#generate {
+	padding: 7px;
+}
+</style>
+
+<script src="js/d3.min.js"></script>
+<script type="text/javascript">
+	function getDataAndDraw() {
+
+		/*   var w = d3.select("#width").property("value");
+		  var h = d3.select("#height").property("value");
+
+		  var xax = d3.select("#xax").property("value");
+		  var yax = d3.select("#yax").property("value");
+
+		  var arr = d3.select("#numbers").property("value").split(",");
+		  var buckets = d3.select("#buckets").property("value");
+
+		  draw(w,h,arr,buckets,xax,yax);
+		 */
+
+		xmlhttp = new XMLHttpRequest();
+		url = "GetData";
+		xmlhttp.open("GET", url, true);
+		xmlhttp.send(null);
+		xmlhttp.onreadystatechange = function() {
+			if (xmlhttp.readyState == 4) {
+				var newd = xmlhttp.responseText;
+				var arr = newd.split(",");
+				for ( var i in arr) {
+					arr[i] = parseInt(arr[i], 10)
+				}
+				var w = 900
+				var h = 500
+
+				var xax = "Marks";
+				var yax = "Frequency";
+
+				//var arr = [2,3,4,5,6,7,4,3,2,2]
+				var buckets = 20;
+
+				draw(w, h, arr, buckets, xax, yax);
+				AutoRefresh(1000)
+			}
+
+		}
+	}
+
+	function draw(w, h, arr, buckets, xax, yax) {
+
+		//remove
+		d3.select("svg").remove();
+
+		if (!buckets) {
+			buckets = 10;
+		}
+		// A formatter for counts.
+		var formatCount = d3.format(",.0f");
+
+		var margin = {
+			top : 10,
+			right : 30,
+			bottom : 40,
+			left : 30
+		}, width = w - margin.left - margin.right, height = h - margin.top
+				- margin.bottom;
+
+		//max
+		var max = Number(d3.max(arr)) + 1;
+
+		var x = d3.scale.linear().domain([ 0, max ]).range([ 0, width ]);
+
+		var data = d3.layout.histogram().bins(x.ticks(buckets))(arr);
+
+		var y = d3.scale.linear().domain([ 0, d3.max(data, function(d) {
+			return d.y;
+		}) ]).range([ height, 0 ]);
+
+		var xAxis = d3.svg.axis().scale(x).ticks(buckets).orient("bottom");
+
+		var svg = d3.select("#chart").append("svg").attr("width",
+				width + margin.left + margin.right).attr("height",
+				height + margin.top + margin.bottom).append("g").attr(
+				"transform",
+				"translate(" + margin.left + "," + margin.top + ")");
+
+		var bar = svg.selectAll(".bar").data(data).enter().append("g").attr(
+				"class", "bar").attr("transform", function(d) {
+			return "translate(" + x(d.x) + "," + y(d.y) + ")";
+		});
+
+		bar.append("rect").attr("x", 1).attr("width", x(data[0].dx) - 1).attr(
+				"height", function(d) {
+					return height - y(d.y);
+				});
+
+		bar.append("text").attr("dy", ".75em").attr("y", 6).attr("x",
+				x(data[0].dx) / 2).attr("text-anchor", "middle").attr("style",
+				"fill:#fff").text(function(d) {
+			return formatCount(d.y);
+		});
+
+		svg.append("g").attr("class", "x axis").attr("transform",
+				"translate(0," + height + ")").call(xAxis);
+
+		//draw the axis labels
+		svg.append("text").attr("text-anchor", "middle").attr("class", "black")
+				.attr("transform",
+						"translate(" + (width / 2) + "," + (height + 40) + ")")
+				.text(xax);
+
+		svg.append("text").attr("text-anchor", "middle").attr("class", "black")
+				.attr(
+						"transform",
+						"translate(" + (-10) + "," + (height / 2)
+								+ ")rotate(-90)").text(yax);
+
+	}
+
+	function AutoRefresh(t) {
+		setTimeout(getDataAndDraw(), t)
+	}
+</script>
+
+</head>
+
+<body onload="JavaScript:AutoRefresh(1000);">
+	<div id="chart"></div>
+
+	<script>
+		
+	</script>
+
+</body>
+</html>
